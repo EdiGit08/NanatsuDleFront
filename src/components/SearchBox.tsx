@@ -5,29 +5,35 @@ import { searchCharacters } from '../services/api'
 interface Props {
   onSelect: (character: SearchResult) => void
   disabled?: boolean
+  excludeIds?: Set<number>
 }
 
-export default function SearchBox({ onSelect, disabled }: Props) {
+export default function SearchBox({ onSelect, disabled, excludeIds }: Props) {
   const [query, setQuery]     = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [open, setOpen]       = useState(false)
   const timeoutRef            = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [activeIndex, setActiveIndex] = useState(-1)
 
   useEffect(() => {
     if (query.length < 1) {
+      setActiveIndex(-1)
       setResults([])
       setOpen(false)
       return
     }
 
-    // Espera 300ms después de que el usuario deja de escribir
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
     timeoutRef.current = setTimeout(async () => {
       const data = await searchCharacters(query)
-      setResults(data)
-      setOpen(data.length > 0)
+      // Filtra los personajes ya intentados
+      const filtered = excludeIds
+        ? data.filter(c => !excludeIds.has(c.id))
+        : data
+      setResults(filtered)
+      setOpen(filtered.length > 0)
     }, 300)
-  }, [query])
+  }, [query, excludeIds])
 
   const handleSelect = (character: SearchResult) => {
     onSelect(character)
@@ -37,11 +43,30 @@ export default function SearchBox({ onSelect, disabled }: Props) {
   }
 
   return (
-    <div style={{ position: 'relative', width: '320px' }}>
+    <div style={{ position: 'relative', width: '520px' }}>
       <input
         type="text"
         value={query}
         onChange={e => setQuery(e.target.value)}
+        onKeyDown={e => {
+          if (e.key === 'ArrowDown') {
+            e.preventDefault()
+            setActiveIndex(prev => Math.min(prev + 1, results.length - 1))
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault()
+            setActiveIndex(prev => Math.max(prev - 1, 0))
+          } else if (e.key === 'Enter') {
+            e.preventDefault()
+            if (activeIndex >= 0 && results[activeIndex]) {
+              handleSelect(results[activeIndex])
+            } else if (results.length > 0) {
+              handleSelect(results[0])
+            }
+          } else if (e.key === 'Escape') {
+            setOpen(false)
+            setActiveIndex(-1)
+          }
+        }}
         placeholder="Escribe el nombre de un personaje..."
         disabled={disabled}
         style={{
@@ -70,10 +95,11 @@ export default function SearchBox({ onSelect, disabled }: Props) {
           maxHeight: '240px',
           overflowY: 'auto',
         }}>
-          {results.map(char => (
+          {results.map((char, index) => (
             <div
               key={char.id}
               onClick={() => handleSelect(char)}
+              onMouseEnter={() => setActiveIndex(index)}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -81,9 +107,8 @@ export default function SearchBox({ onSelect, disabled }: Props) {
                 padding: '8px 12px',
                 cursor: 'pointer',
                 borderBottom: '1px solid #333',
+                background: activeIndex === index ? '#0f3460' : 'transparent',
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#0f3460')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             >
               <img
                 src={char.imageUrl}

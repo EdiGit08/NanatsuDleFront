@@ -33,6 +33,12 @@ export interface TargetCharacter {
   typeOfSkill: string
 }
 
+export interface ImageCharacter {
+  id: number
+  name: string
+  imageUrl: string
+}
+
 // Resultado de búsqueda para el autocompletado
 export interface SearchResult {
   id: number
