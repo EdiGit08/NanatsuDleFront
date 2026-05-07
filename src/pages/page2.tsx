@@ -91,7 +91,9 @@ export default function Juego2() {
 
           {/* Título */}
           <div style={styles.header}>
-            <img src={LOGO_URL} alt="NanatsuDle" style={styles.logo} />
+            <a href="/">
+              <img src={LOGO_URL} alt="NanatsuDle" style={styles.logo} />
+            </a>
             <p style={{
               color: '#fff',
               fontSize: '16px',
@@ -139,6 +141,11 @@ export default function Juego2() {
                   transition: 'filter 0.8s ease',
                 }}
               />
+              {daily2?.correctName && (
+              <p style={{ color: '#ffc107', fontSize: '20px', fontWeight: 700, margin: 0 }}>
+                {daily2.correctName}
+              </p>
+            )}
             </div>
 
             {/* Pistas */}

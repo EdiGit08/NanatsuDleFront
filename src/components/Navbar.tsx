@@ -8,10 +8,10 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { iconUrl: '/juego1.png', label: 'Seven Deadly Sins', path: '/' },
-  { iconUrl: '/juego2.png', label: 'Juego 2',           path: '../pages/page2' },
-  { iconUrl: '/juego3.png', label: 'Juego 3',           path: '../pages/page3' },
-  { iconUrl: '/juego4.png', label: 'Juego 4',           path: '../pages/page4' },
+  { iconUrl: '/juego1.png', label: 'Juego 1',           path: '../page1' },
+  { iconUrl: '/juego2.png', label: 'Juego 2',           path: '../page2' },
+  { iconUrl: '/juego3.png', label: 'Juego 3',           path: '../page3' },
+  { iconUrl: '/juego4.png', label: 'Juego 4',           path: '../page4' },
 ]
 
 export default function Navbar() {

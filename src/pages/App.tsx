@@ -1,267 +1,200 @@
-import type { SearchResult } from '../types'
-import { useDailyGame } from '../hooks/useDailyGame'
-import { useStreak } from '../hooks/useStreak'
-import SearchBox from '../components/SearchBox'
-import GuessRow from '../components/GuessRow'
-import GameOverModal from '../components/GameOverModal'
-import Countdown from '../components/Countdown'
-import HintCard from '../components/HintCard'
+import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 
-const LOGO_URL = 'https://res.cloudinary.com/dsidu0tej/image/upload/v1775107062/NNTDLELogo3_b5mv8z.png'
 const BG_URL   = 'https://res.cloudinary.com/dsidu0tej/image/upload/v1774757940/BackgroundNNTDLE_hdtqrt.jpg'
+const LOGO_URL = 'https://res.cloudinary.com/dsidu0tej/image/upload/v1775107062/NNTDLELogo3_b5mv8z.png'
 
-export default function App() {
-  const { streak, incrementStreak, resetStreak } = useStreak()
+const GAMES = [
+  {
+    path:        '/page1',
+    iconUrl:     '/juego1.png',
+    hoverBg:     '/meliodasbc.png',
+    title:       'Clásico',
+    description: 'Adivina el personaje con pistas de sus atributos',
+  },
+  {
+    path:        '/page2',
+    iconUrl:     '/juego2.png',
+    hoverBg:     'banbc.jpg',
+    title:       'Imagen',
+    description: 'Adivina el personaje por su imagen borrosa',
+  },
+  {
+    path:        '/page3',
+    iconUrl:     '/juego3.png',
+    hoverBg:     'escanorbc.jpg',
+    title:       'Pistas',
+    description: 'Adivina el personaje con pistas progresivas',
+  },
+  {
+    path:        '/page4',
+    iconUrl:     '/juego4.png',
+    hoverBg:     'camilabc.jpg',
+    title:       'Próximamente',
+    description: 'Nuevo modo de juego en camino',
+  },
+]
 
-  const {
-    target, daily, loading, error,
-    showModal, makeGuess, closeModal, getTimeUntilReset,
-  } = useDailyGame({
-    onWin:  incrementStreak,
-    onLose: resetStreak,
-  })
-
-  const handleGuess = async (selected: SearchResult) => {
-    if (!daily || daily.gameOver) return
-    await makeGuess(selected.id)
-  }
-
-  if (loading) return (
-    <div style={styles.centered}>
-      <p style={{ color: '#fff', fontSize: '18px' }}>Cargando personaje del día...</p>
-    </div>
-  )
-
-  if (error) return (
-    <div style={styles.centered}>
-      <p style={{ color: '#e53935' }}>{error}</p>
-    </div>
-  )
-
-  const guesses    = daily?.guesses    ?? []
-  const hints      = daily?.hints      ?? { magic: null, firstAppearance: null }
-  const gameOver   = daily?.gameOver   ?? false
-  const won        = daily?.won        ?? false
-  const guessedIds = new Set(daily?.guessedIds ?? [])
+export default function Home() {
+  const navigate    = useNavigate()
+  const [hovered, setHovered] = useState<number | null>(null)
 
   return (
-    <div style={styles.container}>
+    <div style={{
+      ...styles.container,
+      backgroundImage: hovered !== null && GAMES[hovered].hoverBg
+        ? `url(${GAMES[hovered].hoverBg})`
+        : `url(${BG_URL})`,
+      transition: 'background-image 0.4s ease',
+    }}>
       <div style={styles.overlay}>
-        <div style={styles.inner}>
 
-          {/* Racha fija arriba a la derecha */}
-          <div style={styles.streakBox}>
-            <span style={{ fontSize: '12px', color: '#aaa' }}>Racha</span>
-            <span style={{ fontSize: '24px', fontWeight: 700, color: '#ffc107' }}>
-              {streak.current}
-            </span>
-            <span style={{ fontSize: '11px', color: '#aaa' }}>Mejor: {streak.best}</span>
-          </div>
+        {/* Logo */}
+        <img src={LOGO_URL} alt="NanatsuDle" style={styles.logo} />
 
-          {/* Header */}
-          <div style={styles.header}>
-            <img src={LOGO_URL} alt="NanatsuDle" style={styles.logo} />
-          </div>
+        <p style={styles.subtitle}>
+          Adivina los personajes de los Siete Pecados Capitales
+        </p>
 
-          {/* Tarjetas de pistas */}
-          <div style={styles.hintsRow}>
-            <HintCard
-              icon="✨"
-              label="Magia"
-              unlocksAt={5}
-              currentAttempts={guesses.length}
-              value={hints.magic}
-            />
-            <HintCard
-              icon="📖"
-              label="Primera aparición"
-              unlocksAt={7}
-              currentAttempts={guesses.length}
-              value={hints.firstAppearance}
-            />
-          </div>
+        {/* Tarjetas de juegos */}
+        <div style={styles.gamesWrapper}>
 
-          {/* Buscador o countdown */}
-          {!gameOver ? (
-            <div style={styles.searchArea}>
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '8px',
-                width: '100%',
-              }}>
-                <SearchBox
-                  onSelect={handleGuess}
-                  disabled={gameOver}
-                  excludeIds={guessedIds}
-                />
-                {guesses.length > 0 && (
-                  <p style={{ color: '#aaa', fontSize: '12px' }}>
-                    Intentos: {guesses.length} / 10
-                  </p>
-                )}
+          <div style={styles.gamesList}>
+            {GAMES.map((game, i) => (
+              <div
+                key={i}
+                onClick={() => navigate(game.path)}
+                onMouseEnter={() => setHovered(i)}
+                onMouseLeave={() => setHovered(null)}
+                style={{
+                  ...styles.gameCard,
+                  opacity: 1,
+                  cursor: 'pointer',
+                  pointerEvents: 'auto',
+                  transform:     hovered === i ? 'translateX(6px)' : 'translateX(0)',
+                  borderColor:   hovered === i
+                    ? 'rgba(255,193,7,0.6)'
+                    : 'rgba(255,193,7,0.2)',
+                }}
+              >
+                {/* Icono */}
+                <div style={styles.iconWrapper}>
+                  <img src={game.iconUrl} alt={game.title} style={styles.icon} />
+                </div>
+
+                {/* Texto */}
+                <div style={styles.cardText}>
+                  <span style={styles.cardTitle}>{game.title}</span>
+                  <span style={styles.cardDesc}>{game.description}</span>
+                </div>
+
+                {/* Flecha */}
+                <span style={{
+                  ...styles.arrow,
+                  opacity: hovered === i ? 1 : 0.4,
+                  transform: hovered === i ? 'translateX(4px)' : 'translateX(0)',
+                  transition: 'all 0.2s ease',
+                }}>›</span>
               </div>
-            </div>
-          ) : (
-            <div style={{ marginBottom: '28px' }}>
-              <Countdown getTimeUntilReset={getTimeUntilReset} />
-            </div>
-          )}
-
-          {/* Tabla de intentos */}
-          {guesses.length > 0 && (
-            <div style={styles.tableWrapper}>
-              <div style={styles.tableHeader}>
-                <div style={styles.colPersonaje}>Personaje</div>
-                {['Género', 'Raza', 'Cabello', 'Afiliación', 'Habilidad', 'Altura', 'Arco'].map(col => (
-                  <div key={col} style={styles.colHeader}>{col}</div>
-                ))}
-              </div>
-              <div style={styles.guessList}>
-                {[...guesses].reverse().map((g, i) => (
-                  <GuessRow key={guesses.length - 1 - i} result={g} rowIndex={i} />
-                ))}
-              </div>
-            </div>
-          )}
-
+            ))}
+          </div>
         </div>
       </div>
-
-      {/* Modal fin de juego */}
-      {showModal && target && (
-        <GameOverModal
-          won={won}
-          attempts={guesses.length}
-          target={target}
-          onClose={closeModal}
-        />
-      )}
     </div>
   )
 }
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    minHeight: '100vh',
-    backgroundImage: `url(${BG_URL})`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
+    minHeight:            '100vh',
+    backgroundSize:       'cover',
+    backgroundPosition:   'center',
     backgroundAttachment: 'fixed',
-    color: '#fff',
-    fontFamily: "'Segoe UI', sans-serif",
-    marginLeft: '-72px',        // ← cancela el margin del main
-    paddingLeft: '72px',        // ← mantiene el contenido en su lugar
+    fontFamily:           "'Segoe UI', sans-serif",
   },
   overlay: {
-    minHeight: '100vh',
-    background: 'rgba(10, 10, 26, 0.82)',
-    padding: '24px 0 48px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  inner: {
-    width: '100%',
-    maxWidth: '960px',
-    padding: '0 24px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  centered: {
-    minHeight: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
+    minHeight:      '100vh',
+    background:     'rgba(10, 10, 26, 0.82)',
+    display:        'flex',
+    flexDirection:  'column',
+    alignItems:     'center',
     justifyContent: 'center',
-    background: '#0f0f1a',
-    gap: '16px',
-  },
-  streakBox: {
-    position: 'fixed',
-    top: '16px',
-    right: '24px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    background: 'rgba(26, 26, 46, 0.95)',
-    padding: '10px 20px',
-    borderRadius: '14px',
-    border: '1px solid #ffc10733',
-    gap: '2px',
-    zIndex: 100,
-  },
-  header: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    marginBottom: '16px',
-    width: '100%',
+    padding:        '40px 24px',
+    gap:            '16px',
+    transition:     'background 0.4s ease',
   },
   logo: {
-    height: '180px',
-    objectFit: 'contain',
+    height:       '180px',
+    objectFit:    'contain',
     marginBottom: '8px',
   },
-  hintsRow: {
-    display: 'flex',
-    gap: '16px',
-    justifyContent: 'center',
-    marginBottom: '24px',
+  subtitle: {
+    color:         '#aaa',
+    fontSize:      '14px',
+    textAlign:     'center',
+    marginBottom:  '32px',
+    letterSpacing: '0.5px',
   },
-  searchArea: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '12px',
-    marginBottom: '28px',
-    width: '100%',
+  gamesWrapper: {
+    position:   'relative',
+    width:      '100%',
+    maxWidth:   '480px',
+    display:    'flex',
+    alignItems: 'stretch',
   },
-  tableWrapper: {
-    width: '100%',
-    overflowX: 'auto',
-  },
-  tableHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    marginBottom: '8px',
-    borderBottom: '1px solid #ffffff22',
-    paddingBottom: '8px',
-    minWidth: 'max-content',
-  },
-  colPersonaje: {
-    width: '80px',
-    minWidth: '80px',
-    textAlign: 'center' as const,
-    fontSize: '11px',
-    color: '#fff',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.8px',
-    fontWeight: 700,
-    background: 'rgba(10, 10, 26, 0.75)',
-    padding: '6px 4px',
-    borderRadius: '6px',
-  },
-  colHeader: {
-    width: '110px',
-    minWidth: '110px',
-    textAlign: 'center' as const,
-    fontSize: '11px',
-    color: '#fff',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.8px',
-    fontWeight: 700,
-    background: 'rgba(10, 10, 26, 0.75)',
-    padding: '6px 4px',
-    borderRadius: '6px',
-  },
-  guessList: {
-    display: 'flex',
+  gamesList: {
+    flex:          1,
+    display:       'flex',
     flexDirection: 'column',
-    gap: '6px',
-    minWidth: 'max-content',
+    gap:           '12px',
+  },
+  gameCard: {
+    display:        'flex',
+    alignItems:     'center',
+    gap:            '16px',
+    background:     'rgba(26, 26, 46, 0.85)',
+    border:         '1px solid rgba(255, 193, 7, 0.2)',
+    borderRadius:   '14px',
+    padding:        '14px 18px',
+    transition:     'transform 0.2s ease, border-color 0.2s ease',
+    backdropFilter: 'blur(6px)',
+  },
+  iconWrapper: {
+    width:          '52px',
+    height:         '52px',
+    borderRadius:   '12px',
+    background:     'rgba(255,193,7,0.1)',
+    border:         '1px solid rgba(255,193,7,0.3)',
+    display:        'flex',
+    alignItems:     'center',
+    justifyContent: 'center',
+    flexShrink:     0,
+  },
+  icon: {
+    width:     '36px',
+    height:    '36px',
+    objectFit: 'contain',
+  },
+  cardText: {
+    flex:          1,
+    display:       'flex',
+    flexDirection: 'column',
+    gap:           '3px',
+  },
+  cardTitle: {
+    color:      '#fff',
+    fontSize:   '18px',
+    fontWeight: 700,
+  },
+  cardDesc: {
+    color:    '#aaa',
+    fontSize: '13px',
+  },
+  arrow: {
+    color:      '#ffc107',
+    fontSize:   '28px',
+    fontWeight: 700,
+    lineHeight: 1,
+    flexShrink: 0,
   },
 }

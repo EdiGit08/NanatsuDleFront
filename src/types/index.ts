@@ -57,3 +57,31 @@ export interface StreakData {
   current: number
   best: number
 }
+
+// Resultado de la fila en el juego 3
+export interface RowResult {
+  height: number
+  race: string
+  hairColor: string
+  gender: string
+  affiliation: string
+  correctImageUrl: string | null
+}
+
+export interface Daily4State {
+  date:              string
+  characterGuesses:  CharacterGuess4[]
+  categoryGuess:     string | null
+  gameOver:          boolean
+  won:               boolean
+  correctCategory:   string | null
+  correctTipo:       string | null
+  categoryAttempted: boolean
+}
+
+export interface CharacterGuess4 {
+  id:       number
+  name:     string
+  imageUrl: string
+  correct:  boolean
+}
